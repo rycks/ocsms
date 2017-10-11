@@ -7,6 +7,8 @@
  *
  * @author Loic Blot <loic.blot@unix-experience.fr>
  * @copyright Loic Blot 2014-2017
+ * @author Eric Seigne <eric.seigne@cap-rel.fr>
+ * @copyright Eric Seigne 2017
  */
 
 namespace OCA\OcSms\Db;
@@ -88,6 +90,15 @@ class ConfigMapper extends Mapper {
 
 	public function getNotificationState () {
 		$st = $this->getKey("notification_state");
+		// Default state is 1/enabled
+		if ($st === false) {
+			$st = 1;
+		}
+		return $st;
+	}
+
+	public function getForwardmailState () {
+		$st = $this->getKey("forwardmail_state");
 		// Default state is 1/enabled
 		if ($st === false) {
 			$st = 1;

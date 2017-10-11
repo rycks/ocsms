@@ -7,6 +7,8 @@
  *
  * @author Loic Blot <loic.blot@unix-experience.fr>
  * @copyright Loic Blot 2014-2017
+ * @author Eric Seigne <eric.seigne@cap-rel.fr>
+ * @copyright Eric Seigne 2017
  */
 
 namespace OCA\OcSms\Controller;
@@ -43,6 +45,7 @@ class SettingsController extends Controller {
 			"country" => $country,
 			"message_limit" => $this->configMapper->getMessageLimit(),
 			"notification_state" => $this->configMapper->getNotificationState(),
+			"forwardmail_state" => $this->configMapper->getForwardMailState(),
 			"contact_order" => $this->configMapper->getContactOrder(),
 			"contact_order_reverse" => $this->configMapper->getContactOrderReverse(),
 		));
@@ -81,6 +84,19 @@ class SettingsController extends Controller {
 			return new JSONResponse(array("status" => false, "msg" => "Invalid notification state"), Http::STATUS_BAD_REQUEST);
 		}
 		$this->configMapper->set("notification_state", $notification);
+		return new JSONResponse(array("status" => true, "msg" => "OK"));
+	}
+
+    /**
+	 * @NoAdminRequired
+	 * @param $forwardmail
+	 * @return JSONResponse
+	 */
+	function setForwardmailState($forwardmail) {
+		if (!in_array($forwardmail, ['true','false'])) {
+            return new JSONResponse(array("status" => false, "msg" => "Invalid forwardmail state"), Http::STATUS_BAD_REQUEST);
+		}
+		$this->configMapper->set("forwardmail_state", $forwardmail);
 		return new JSONResponse(array("status" => true, "msg" => "OK"));
 	}
 

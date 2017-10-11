@@ -54,6 +54,12 @@ use \OCA\OcSms\Lib\CountryCodes;
 					<option value="0">Disable</option>
 				</select>
 			</div>
+
+			<div>
+				<label for"setting_forwardmail">Forward by mail settings</label>
+				<input type="checkbox" ng-model="setting_forwardmail" ng-change="setForwardmailSetting()" />
+			</div>
+
 		</div> <!-- app-settings-content -->
 	</div>
 

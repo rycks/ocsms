@@ -94,6 +94,7 @@ app.controller('OcSmsController', ['$scope', '$interval', '$timeout', '$compile'
 
 		$scope.setting_msgLimit = 100;
 		$scope.setting_enableNotifications = 1;
+		$scope.setting_enableForwardmail = true;
 		$scope.setting_contactOrder = 'lastmsg';
 		$scope.setting_contactOrderReverse = true;
 
@@ -133,6 +134,14 @@ app.controller('OcSmsController', ['$scope', '$interval', '$timeout', '$compile'
 			$.post($scope.generateUrl('/set/notification_state'),{'notification': $scope.setting_enableNotifications});
 		};
 
+		$scope.setForwardmailSetting = function () {
+			if ($scope.setting_enableForwardmail < 0 || $scope.setting_enableForwardmail > 2) {
+				$scope.setting_enableForwardmail = 0;
+				return;
+			}
+			$.post($scope.generateUrl('/set/forwardmail_state'),{'forwardmail': $scope.setting_enableForwardmail});
+		};
+	    
 		$scope.setContactOrderSetting = function () {
 			$.post($scope.generateUrl('/set/contact_order'),
 				{
@@ -382,11 +391,13 @@ app.controller('OcSmsController', ['$scope', '$interval', '$timeout', '$compile'
 
 					$('input[name=setting_msg_per_page]').val(parseInt(jsondata["message_limit"]));
 					$('select[name=setting_notif]').val(jsondata["notification_state"]);
+				        $('select[name=setting_forward]').val(toBool(jsondata["forwardmail_state"]));
 					$('select[name=setting_contact_order]').val(jsondata["contact_order"]);
 					$('input[name=setting_contact_order_reverse').val(toBool(jsondata["contact_order_reverse"]));
 
 					$scope.setting_msgLimit = parseInt(jsondata["message_limit"]);
 					$scope.setting_enableNotifications = jsondata["notification_state"];
+					$scope.setting_enableForwardmail = toBool(jsondata["forwardmail_state"]);
 					$scope.setting_contactOrder = jsondata["contact_order"];
 					$scope.setting_contactOrderReverse = toBool(jsondata["contact_order_reverse"]);
 				}

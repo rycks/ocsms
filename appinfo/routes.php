@@ -21,6 +21,7 @@ $application->registerRoutes($this, array('routes' => array(
 	array('name' => 'settings#set_country', 'url'=> '/set/country', 'verb' => 'POST'),
 	array('name' => 'settings#set_messagelimit', 'url'=> '/set/msglimit', 'verb' => 'POST'),
 	array('name' => 'settings#set_notification_state', 'url'=> '/set/notification_state', 'verb' => 'POST'),
+	array('name' => 'settings#set_forwardmail_state', 'url'=> '/set/forwardmail_state', 'verb' => 'POST'),
 	array('name' => 'settings#set_contact_order', 'url' => '/set/contact_order', 'verb' => 'POST'),
 
 	// Front API

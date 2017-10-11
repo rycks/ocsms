@@ -7,6 +7,8 @@
  *
  * @author Loic Blot <loic.blot@unix-experience.fr>
  * @copyright Loic Blot 2014-2017
+ * @author Eric Seigne <eric.seigne@cap-rel.fr>
+ * @copyright Eric Seigne 2017
  */
 
 namespace OCA\OcSms\Db;
@@ -18,6 +20,11 @@ use \OCP\AppFramework\Db\Mapper;
 use \OCA\OcSms\AppInfo\OcSmsApp;
 use \OCA\OcSms\Lib\PhoneNumberFormatter;
 use \OCA\OcSms\Db\ConversationStateMapper;
+
+use \OCP\IUserSession;
+use \OCP\Mail\IMailer;
+use \OCP\IUser;
+use \OCP\IUserManager;
 
 class SmsMapper extends Mapper {
 	/*
@@ -70,6 +77,40 @@ class SmsMapper extends Mapper {
 			return $row["mx"];
 		}
 
+		return 0;
+	}
+
+	public function getLastTimestampMail ($userId) {
+		$query = \OCP\DB::prepare('SELECT datavalue as mx FROM ' .
+			'*PREFIX*ocsms_user_datas WHERE user_id = ? AND datakey = ?');
+		$result = $query->execute(array($userId, 'mail_date_last'));
+
+		if ($row = $result->fetchRow()) {
+			return $row["mx"];
+		}
+
+		return 0;
+	}
+
+    public function updateLastTimestampMail ($userId, $date) {
+        $lastmail = self::getLastTimestampMail ($userId);
+
+        //INSERT the first time
+        if($lastmail == 0) {
+            $query = \OCP\DB::prepare('INSERT INTO *PREFIX*ocsms_user_datas ' .
+			'(user_id, datakey, datavalue) VALUES ' .
+			'(?,?,?)');
+			$result = $query->execute(array(
+				$userId, 'mail_date_last', $date
+			));
+        }
+        //OR UPDATE anywhere :)
+        else {
+            $query = \OCP\DB::prepare('UPDATE *PREFIX*ocsms_user_datas SET datavalue=? WHERE user_id=? AND datakey=?');
+            $result = $query->execute(array(
+				$date, $userId, 'mail_date_last'
+			));
+        }
 		return 0;
 	}
 
@@ -288,12 +329,42 @@ class SmsMapper extends Mapper {
 				$sms["address"], $sms["body"], (int) $sms["mbox"],
 				(int) $sms["type"]
 			));
-
-
-		}
-
+        }
 		\OCP\DB::commit();
-	}
+		
+		//Send mail if checkbox is toggled -> i don't know how to get that ?
+		\OCP\DB::beginTransaction();
+		//search for last mail and last sms
+		$lastsms  = self::getLastTimestamp($userId);
+		$lastmail = self::getLastTimestampMail($userId);
+		$user = \OC::$server->getUserManager()->get($userId);
+		$emailAddress = $user->getEMailAddress();
+
+        if($emailAddress != "") {
+            /*
+              $fh = fopen("/tmp/eric.log", 'a');
+              fwrite($fh,"***** sms : ($userId)");
+              fwrite($fh, "<" . $emailAddress . ">");
+              fwrite($fh, "<" . $emailAddress2 . ">");
+              fwrite($fh, $sms["body"]);
+              fwrite($fh, "*****\n");
+              fclose($fh);
+            */        
+            //prepare for mail
+            $from_user = "Robot SMS - " . $sms["address"];
+            $headers = "From: $from_user <$emailAddress>\r\n".
+                "MIME-Version: 1.0" . "\r\n" .
+                "Content-type: text/plain; charset=UTF-8" . "\r\n"; 
+            
+            if($lastsms > $lastmail) {
+                $message = "New SMS form $userId.\nFrom: " . $sms["address"] . "\nMessage:\n\n" . $sms["body"] . "\n\n--\nBy smsmapper.php (nextcloud modifyed by erics)";
+                mail($emailAddress, "New SMS from " . $sms["address"], $message, $headers);
+            }
+            self::updateLastTimestampMail ($userId, $lastsms);
+            \OCP\DB::commit();
+        }
+    }
 }
+
 
 ?>
